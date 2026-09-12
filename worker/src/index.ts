@@ -505,7 +505,7 @@ async function askGemini(env: Env, question: string, sources: any[] = []) {
       .slice(0, 5)
       .map((s, idx) => `[Source ${idx + 1} - ${s.title ?? 'Actualité'}] (${s.source_site ?? 'France'} - ${s.source_date ?? 'récent'}) : ${s.content ?? ''}`)
       .join('\n\n');
-    contextText = `Voici les dépêches et faits d'actualités récents en France :\n\n${formatted}\n\nQuestion de l'internaute : ${question}\n\nConsigne : Réponds de manière complète, naturelle et percutante en tant qu'Emmanuel Macron (à la première personne "je", style didactique, "en même temps") en décryptant et commentant les faits d'actualité ci-dessus. Ta réponse doit être structurée en 2 à 3 paragraphes complets sans s'interrompre.`;
+    contextText = `Voici les dépêches et faits d'actualités récents en France :\n\n${formatted}\n\nQuestion de l'internaute : ${question}\n\nConsigne : Réponds de manière concise, percutante et complète en tant qu'Emmanuel Macron (à la première personne "je", style didactique, "en même temps") en commentant ces faits d'actualité. Rédige une réponse fluide et aboutie de 150 à 200 mots (2 paragraphes clairs) qui se termine proprement.`;
   }
 
   for (const model of models) {
@@ -526,7 +526,7 @@ async function askGemini(env: Env, question: string, sources: any[] = []) {
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 1500,
+            maxOutputTokens: 2500,
           },
         }),
       });
@@ -538,7 +538,8 @@ async function askGemini(env: Env, question: string, sources: any[] = []) {
       }
 
       const data: any = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const parts = data.candidates?.[0]?.content?.parts ?? [];
+      const text = parts.map((p: any) => p.text || '').join('');
       if (text && text.trim().length > 0) {
         const finalSources = buildSources(sources);
         return {
