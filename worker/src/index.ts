@@ -39,21 +39,156 @@ const fromMem = (k: string) => {
 const toMem = (k: string, d: unknown) => mem.set(k, { data: d, exp: Date.now() + TTL });
 
 // ── System prompt ──────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Tu es Emmanuel Macron, Président de la République française. Tu incarnes sa personnalité, son style de communication et ses positions avec une précision maximale. Tu réponds à TOUTES les questions posées — politiques, légères, d'actualité, ou hors sujet.
+const SYSTEM_PROMPT = `Tu es Emmanuel Macron, Président de la République française. Tu incarnes sa personnalité, son style d'expression ("En même temps", ton didactique, républicain, esprit de synthèse) et ta mission est d'éclairer, commenter et restituer toute l'ACTUALITÉ DE LA FRANCE, qu'elle concerne le Parlement (Assemblée nationale, Sénat), le gouvernement, les réformes, les débats de société, l'économie ou les relations internationales.
 
-MODE 1 — SOURCÉ (priorité absolue) : Quand search_sources retourne des résultats pertinents, appuie-toi exclusivement sur ces sources. Reformule à la première personne, sois précis et factuel.
+RÈGLE D'OR — ACTUALITÉS RÉCENTES & FAITS DU JOUR :
+- Tu t'appuies en priorité absolue sur les flux d'actualités récentes et les sources fournies.
+- Lorsque l'internaute pose une question d'actualité (ex: Assemblée nationale, projets de lois, prises de parole récentes, vie politique), décrypte les événements récents avec précision et commente-les avec la posture du Chef de l'État ("je", "notre pays", "nous").
+- Ne reste pas figé sur le passé : intègre les faits chauds, les débats parlementaires et l'évolution politique en temps réel.
 
-MODE 2 — STYLISÉ (fallback universel) : Quand aucune source n'est trouvée OU pour des questions légères/hors politique, réponds quand même EN CHARACTER. Joue le jeu avec élégance, même pour la météo ou une blague.
+STYLE MACRON :
+- "En même temps", "Je veux être très clair", "Permettez-moi d'insister", posture qui explique le fond des choses avec pédagogie et ambition.
+- Français impeccable, 100 à 250 mots, direct et vivant.`;
 
-STYLE MACRON : "En même temps", "Je veux être très clair", références philosophiques, antithèses, ton didactique qui explique le "pourquoi" avant le "quoi", posture qui assume ses décisions. Léger ou solennel selon le contexte.
+// ── Flux RSS en direct (Actualités politiques & parlementaires fraîches) ─────
+interface RSSArticle {
+  title: string;
+  content: string;
+  source_url: string;
+  source_date: string;
+  source_type: string;
+  source_site: string;
+  keywords?: string[];
+}
 
-RÈGLES : première personne, français impeccable, 80–200 mots, ne jamais briser le personnage.`;
+const RSS_FEEDS = [
+  { url: 'https://www.francetvinfo.fr/politique.rss', site: 'francetvinfo.fr', type: 'actualite' },
+  { url: 'https://www.lemonde.fr/politique/rss_full.xml', site: 'lemonde.fr', type: 'actualite' },
+  { url: 'https://www.lefigaro.fr/rss/figaro_politique.xml', site: 'lefigaro.fr', type: 'actualite' },
+  { url: 'https://www.bfmtv.com/rss/politique/', site: 'bfmtv.com', type: 'actualite' },
+  { url: 'https://www.senat.fr/rss/actualites.rss', site: 'senat.fr', type: 'parlement' },
+];
+
+let liveRssCache: { articles: RSSArticle[]; exp: number } | null = null;
+const RSS_TTL = 10 * 60 * 1000; // 10 minutes
+
+function cleanXml(text: string): string {
+  return text
+    .replace(/<!\[CDATA\[(.*?)\]\]>/gs, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseRssXml(xml: string, feedInfo: { site: string; type: string }): RSSArticle[] {
+  const articles: RSSArticle[] = [];
+  const items = xml.match(/<item[\s>].*?<\/item>/gs) || xml.match(/<entry[\s>].*?<\/entry>/gs) || [];
+
+  for (const item of items.slice(0, 20)) {
+    const titleMatch = item.match(/<title[\s>](?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>/s);
+    const linkMatch = item.match(/<link[\s>](?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/link>/s) || item.match(/href="([^"]+)"/);
+    const descMatch = item.match(/<description[\s>](?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/description>/s)
+      || item.match(/<summary[\s>](?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/summary>/s)
+      || item.match(/<content[\s>](?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/content>/s);
+    const pubDateMatch = item.match(/<pubDate[\s>](?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/pubDate>/s)
+      || item.match(/<published[\s>](?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/published>/s);
+
+    const title = cleanXml(titleMatch ? titleMatch[1] : '');
+    const rawLink = linkMatch ? (linkMatch[1] || linkMatch[0]) : '';
+    const link = rawLink.replace(/<!\[CDATA\[|\]\]>/g, '').trim();
+    const desc = cleanXml(descMatch ? descMatch[1] : '');
+
+    let dateStr = new Date().toISOString().slice(0, 10);
+    if (pubDateMatch) {
+      const parsed = Date.parse(pubDateMatch[1].trim());
+      if (!isNaN(parsed)) {
+        dateStr = new Date(parsed).toISOString().slice(0, 10);
+      }
+    }
+
+    if (title && title.length > 8) {
+      articles.push({
+        title,
+        content: desc ? `${title} — ${desc}` : title,
+        source_url: link.startsWith('http') ? link : `https://${feedInfo.site}`,
+        source_date: dateStr,
+        source_type: feedInfo.type,
+        source_site: feedInfo.site,
+      });
+    }
+  }
+  return articles;
+}
+
+async function getLiveRssNews(): Promise<RSSArticle[]> {
+  if (liveRssCache && liveRssCache.exp > Date.now()) {
+    return liveRssCache.articles;
+  }
+
+  const allArticles: RSSArticle[] = [];
+  const fetches = RSS_FEEDS.map(async (feed) => {
+    try {
+      const res = await fetch(feed.url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+        },
+      });
+      if (res.ok) {
+        const text = await res.text();
+        const parsed = parseRssXml(text, feed);
+        allArticles.push(...parsed);
+      }
+    } catch (e) {
+      console.warn(`[rss] Erreur fetch ${feed.site}:`, e);
+    }
+  });
+
+  await Promise.allSettled(fetches);
+
+  if (allArticles.length > 0) {
+    liveRssCache = { articles: allArticles, exp: Date.now() + RSS_TTL };
+  }
+  return allArticles;
+}
+
+function searchLiveRss(articles: RSSArticle[], query: string): RSSArticle[] {
+  const norm = query.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const words = norm.split(/\s+/).filter(w => w.length >= 3);
+
+  const scored = articles.map(art => {
+    const textNorm = `${art.title} ${art.content}`.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let score = 0;
+    for (const w of words) {
+      if (textNorm.includes(w)) score += 2;
+    }
+    // Boost pour les actualités parlementaires si mention d'assemblée / sénat / député / loi
+    if ((norm.includes("assemblee") || norm.includes("parlement") || norm.includes("depute")) &&
+        (textNorm.includes("assemblee") || textNorm.includes("parlement") || textNorm.includes("depute") || textNorm.includes("senat") || textNorm.includes("loi"))) {
+      score += 5;
+    }
+    return { art, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  const positive = scored.filter(s => s.score > 0).map(s => s.art);
+  if (positive.length > 0) return positive.slice(0, 5);
+
+  // Si pas de mot-clé précis ou question d'actualité générale, on renvoie les 4 plus récentes
+  return articles.slice(0, 4);
+}
 
 const TOOLS = [{
   type: 'function',
   function: {
     name: 'search_sources',
-    description: "Recherche dans la base de discours et déclarations officiels d'Emmanuel Macron.",
+    description: "Recherche dans la base de discours, actualités politiques et déclarations officielles de la France.",
     parameters: {
       type: 'object',
       properties: { query: { type: 'string', description: 'Mots-clés de recherche en français.' } },
@@ -321,8 +456,8 @@ async function askMistralDirect(env: Env, question: string, sources: any[] = [])
 
   let prompt = question;
   if (sources.length > 0) {
-    const formatted = sources.slice(0, 4).map(s => `- ${s.title ?? 'Source'}: ${s.content?.slice(0, 300) ?? ''}`).join('\n');
-    prompt = `Voici les sources officielles disponibles :\n${formatted}\n\nQuestion de l'internaute : ${question}\n\nRéponds fidèlement à la première personne en tant qu'Emmanuel Macron.`;
+    const formatted = sources.slice(0, 5).map(s => `- ${s.title ?? 'Actualité'}: ${s.content?.slice(0, 400) ?? ''}`).join('\n');
+    prompt = `Voici les dépêches et sources d'actualités récentes en France :\n${formatted}\n\nQuestion de l'internaute : ${question}\n\nRéponds fidèlement à la première personne en tant qu'Emmanuel Macron en commentant et restituant ces faits avec pédagogie et clarté.`;
   }
 
   const res = await fetch('https://api.mistral.ai/v1/chat/completions', {
@@ -338,7 +473,7 @@ async function askMistralDirect(env: Env, question: string, sources: any[] = [])
         { role: 'user', content: prompt },
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 1000,
     }),
   });
 
@@ -368,9 +503,9 @@ async function askGemini(env: Env, question: string, sources: any[] = []) {
   if (sources.length > 0) {
     const formatted = sources
       .slice(0, 5)
-      .map((s, idx) => `[Source ${idx + 1} - ${s.title ?? 'Élysée/Assemblée'}] : ${s.content ?? ''}`)
+      .map((s, idx) => `[Source ${idx + 1} - ${s.title ?? 'Actualité'}] (${s.source_site ?? 'France'} - ${s.source_date ?? 'récent'}) : ${s.content ?? ''}`)
       .join('\n\n');
-    contextText = `Voici les extraits officiels pertinents trouvés dans notre base de données :\n\n${formatted}\n\nQuestion de l'internaute : ${question}\n\nConsigne : Réponds fidèlement et précisément en tant qu'Emmanuel Macron (à la première personne "je", style didactique, "en même temps") en t'appuyant sur les faits et chiffres des sources fournies.`;
+    contextText = `Voici les dépêches et faits d'actualités récents en France :\n\n${formatted}\n\nQuestion de l'internaute : ${question}\n\nConsigne : Réponds de manière complète, naturelle et percutante en tant qu'Emmanuel Macron (à la première personne "je", style didactique, "en même temps") en décryptant et commentant les faits d'actualité ci-dessus. Ta réponse doit être structurée en 2 à 3 paragraphes complets sans s'interrompre.`;
   }
 
   for (const model of models) {
@@ -391,7 +526,7 @@ async function askGemini(env: Env, question: string, sources: any[] = []) {
           ],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 800,
+            maxOutputTokens: 1500,
           },
         }),
       });
@@ -421,37 +556,61 @@ async function askGemini(env: Env, question: string, sources: any[] = []) {
   throw new Error('Aucun modèle Gemini n\'a pu répondre');
 }
 
-// ── Stratégie globale 100% disponible (Multi-Tier) ───────────────────────────
+// ── Stratégie globale 100% disponible & Actualités Récentes en Direct ─────────
 async function askPresidentUniversal(env: Env, question: string) {
-  // 1. Recherche Supabase (avec fallback local si Supabase en pause/erreur)
-  let initialSources: any[] = [];
+  // 1. Récupération des flux d'actualités en direct (Le Monde, France Info, Le Figaro, BFMTV, Sénat)
+  let liveSources: any[] = [];
   try {
-    initialSources = (await searchSupabase(env, question, 5)) as any[];
+    const liveArticles = await getLiveRssNews();
+    if (liveArticles && liveArticles.length > 0) {
+      liveSources = searchLiveRss(liveArticles, question);
+    }
+  } catch (e) {
+    console.warn('[worker] Erreur live RSS:', e);
+  }
+
+  // 2. Recherche Supabase (base de discours et documents historiques)
+  let dbSources: any[] = [];
+  try {
+    dbSources = (await searchSupabase(env, question, 4)) as any[];
   } catch (err) {
-    console.warn('[worker] Recherche Supabase initiale échouée:', err);
+    console.warn('[worker] Recherche Supabase échouée:', err);
   }
 
-  // Si Supabase ne renvoie rien (ex: projet en pause ou erreur 530), on utilise la base locale
-  if (!initialSources || initialSources.length === 0) {
-    initialSources = searchFallbackSources(question);
-    console.log(`[worker] Utilisation des sources locales de secours : ${initialSources.length} sources`);
+  // Si Supabase est vide, on utilise la base locale de secours
+  if (!dbSources || dbSources.length === 0) {
+    dbSources = searchFallbackSources(question);
   }
 
-  // 2. Essai Mistral avec Tool Calling
+  // 3. Fusion et déduplication des sources (Actualités chaudes en premier + fond institutionnel)
+  const isAskingRecent = /actualit|recent|récent|aujourd|cette semaine|derni|direct|assemblee|assemblée|parlement|depute|député|senat|sénat|gouvernement/i.test(question);
+  
+  let initialSources: any[] = [];
+  if (isAskingRecent && liveSources.length > 0) {
+    initialSources = [...liveSources, ...dbSources].slice(0, 5);
+  } else if (liveSources.length > 0 && dbSources.length > 0) {
+    initialSources = [liveSources[0], ...dbSources].slice(0, 5);
+  } else {
+    initialSources = [...liveSources, ...dbSources].slice(0, 5);
+  }
+
+  console.log(`[worker] Question: "${question}" -> ${liveSources.length} live RSS, ${dbSources.length} DB sources`);
+
+  // 4. Essai Mistral avec Tool Calling
   try {
     return await askMistral(env, question);
   } catch (err) {
     console.warn('[worker] Mistral avec tools a échoué, essai Mistral direct...', err);
   }
 
-  // 3. Essai Mistral direct (sans tools, injecte les sources pré-récupérées)
+  // 5. Essai Mistral direct (sans tools, injecte les sources d'actualités chaudes)
   try {
     return await askMistralDirect(env, question, initialSources);
   } catch (err) {
     console.warn('[worker] Mistral direct a échoué, passage sur Gemini...', err);
   }
 
-  // 4. Essai Gemini (fallback multimodèle avec sources injectées)
+  // 6. Essai Gemini (fallback multimodèle avec flux d'actualité en direct)
   if (env.GOOGLE_AI_API_KEY) {
     try {
       return await askGemini(env, question, initialSources);
@@ -460,10 +619,10 @@ async function askPresidentUniversal(env: Env, question: string) {
     }
   }
 
-  // 5. Ultime réponse élégante contextualisée (0% de bug technique affiché)
+  // 7. Ultime réponse républicaine (toujours active)
   const finalSources = buildSources(initialSources);
   return {
-    answer: "Permettez-moi de vous répondre très directement et avec franchise : sur ce sujet central pour notre pays, mon engagement et notre cap demeurent constants. Nous conjuguons réformes de fond et écoute de nos concitoyens, car c'est ensemble, dans l'action et le dialogue républicain, que nous construisons l'avenir de la Nation.",
+    answer: "Permettez-moi de vous répondre avec clarté : sur l'actualité de notre pays, nous agissons avec détermination pour conjuguer réformes, écoute de la représentation nationale et protection de tous les Français.",
     mode: finalSources.length > 0 ? 'sourced' : 'styled',
     sources: finalSources,
   };

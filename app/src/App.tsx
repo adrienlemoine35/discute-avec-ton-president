@@ -44,14 +44,13 @@ export default function App() {
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
-          Pose une question{' '}
+          Pose une question sur{' '}
           <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(90deg, ${FR_BLUE} 0%, ${FR_RED} 100%)` }}>
-            politique
+            l'actualité de la France
           </span>
         </h2>
         <p className="max-w-xl mx-auto text-slate-500 text-base leading-relaxed">
-          L'agent répond en s'appuyant <strong className="text-slate-700">exclusivement</strong> sur
-          les discours et déclarations officielles d'Emmanuel Macron — chaque réponse est sourcée et vérifiable.
+          L'agent analyse en direct toute l'actualité de la France, les débats parlementaires et les positions officielles — chaque réponse est sourcée et vérifiable.
         </p>
       </section>
 
