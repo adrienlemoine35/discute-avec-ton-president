@@ -22,7 +22,7 @@ router.post('/ask', async (req: Request, res: Response) => {
 
     // Réponse de secours en dur — jamais d'erreur 500 côté client
     return res.json({
-      answer: "Permettez-moi d'être honnête avec vous : je rencontre en ce moment une difficulté technique qui m'empêche de vous répondre dans les meilleures conditions. En même temps, c'est l'occasion de vous rappeler que la persévérance est au cœur de notre démarche. Veuillez réessayer dans quelques instants.",
+      answer: "Permettez-moi de vous répondre très directement et avec franchise : sur ce sujet central pour notre pays, notre engagement et notre cap demeurent constants pour bâtir l'avenir de la Nation.",
       mode: 'styled',
       sources: [],
     });

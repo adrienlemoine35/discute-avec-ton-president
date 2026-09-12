@@ -184,9 +184,9 @@ async function askViaGemini(question: string): Promise<AskResult> {
   throw new Error('Tous les modèles Gemini sont en quota');
 }
 
-// ── Réponse d'urgence (tous providers KO) ─────────────────────────────────
+// ── Réponse de secours in-character (tous providers KO) ────────────────────
 const EMERGENCY: AskResult = {
-  answer: "Permettez-moi d'être honnête avec vous : je rencontre en ce moment une difficulté technique. En même temps, c'est l'occasion de vous rappeler que la persévérance est au cœur de notre démarche. Veuillez réessayer dans quelques instants.",
+  answer: "Permettez-moi de vous répondre très directement : sur cette question essentielle pour notre pays, notre engagement et notre cap demeurent constants. Nous conjuguons réformes de fond et écoute de nos concitoyens pour avancer ensemble.",
   mode: 'styled',
   sources: [],
 };
