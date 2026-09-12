@@ -9,7 +9,8 @@ const FR_RED = '#EF4135'
 
 const TOPICS: { label: string; question: string; emoji: string }[] = [
   { emoji: '👴', label: 'Retraites', question: 'Quelle est votre position sur la réforme des retraites ?' },
-  { emoji: '🇪🇺', label: 'Europe', question: "Quelle est votre vision pour l'Europe et la souveraineté européenne ?" },
+  { emoji: '�️', label: 'Assemblée', question: 'Quelle est votre relation avec l\'Assemblée nationale et les compromis parlementaires ?' },
+  { emoji: '�🇪🇺', label: 'Europe', question: "Quelle est votre vision pour l'Europe et la souveraineté européenne ?" },
   { emoji: '⚛️', label: 'Nucléaire', question: "Quelle est votre politique sur l'énergie nucléaire ?" },
   { emoji: '🌿', label: 'Écologie', question: 'Comment abordez-vous la transition écologique et le climat ?' },
   { emoji: '🏭', label: 'Industrie', question: "Comment reindustrialiser la France et retrouver la souveraineté industrielle ?" },

@@ -86,23 +86,39 @@ export default function App() {
       <section className="border-t border-slate-200 bg-slate-50 py-12 px-5">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-center text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">Sources indexées</h3>
-          <p className="text-center text-xs text-slate-400 mb-8">38 documents · discours, déclarations, tweets et posts officiels</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <p className="text-center text-xs text-slate-400 mb-8">Discours, déclarations, travaux parlementaires, flux d'actualité et réseaux officiels</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               {
                 site: 'elysee.fr',
                 type: 'Officiel',
                 color: FR_BLUE,
                 detail: 'Discours, allocutions\net communiqués officiels',
-                count: '18 sources',
+                count: 'Présidence',
                 href: 'https://www.elysee.fr',
+              },
+              {
+                site: 'assemblee-nationale.fr',
+                type: 'Parlement',
+                color: '#0F766E',
+                detail: 'Actualités, lois votées\net débats en séance',
+                count: 'Assemblée',
+                href: 'https://www.assemblee-nationale.fr',
+              },
+              {
+                site: 'vie-publique.fr',
+                type: 'Archives',
+                color: '#1D4ED8',
+                detail: 'Déclarations publiques\net comptes-rendus',
+                count: 'Vie Publique',
+                href: 'https://www.vie-publique.fr',
               },
               {
                 site: 'x.com / Twitter',
                 type: 'Réseau social',
                 color: '#1a1a1a',
                 detail: '@EmmanuelMacron\net @Elysee',
-                count: '8 tweets',
+                count: 'Réseaux',
                 href: 'https://x.com/EmmanuelMacron',
               },
               {
@@ -110,15 +126,15 @@ export default function App() {
                 type: 'Réseau social',
                 color: '#E1306C',
                 detail: '@elysee\net @emmanuelmacron',
-                count: '4 posts',
+                count: 'Réseaux',
                 href: 'https://www.instagram.com/elysee',
               },
               {
                 site: 'Interviews & presse',
                 type: 'Médias',
                 color: '#6B21A8',
-                detail: 'TF1, France 2\net autres médias',
-                count: '8 interviews',
+                detail: 'TF1, France 2, LCP\net débats publics',
+                count: 'Médias',
                 href: null,
               },
             ].map((s) => (
