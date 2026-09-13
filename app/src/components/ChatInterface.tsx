@@ -31,7 +31,7 @@ const INITIAL_MESSAGE: Message = {
   id: 'init',
   role: 'assistant',
   content:
-    "Bonjour. Je suis l'agent conversationnel \"Président IA\". Posez-moi une question sur la politique française, une réforme, une position de l'exécutif. Je m'appuie exclusivement sur des déclarations publiques sourcées.",
+    "Bonjour. Je suis l'agent conversationnel \"Président IA\". Posez-moi une question sur l'actualité de la France, les réformes ou la politique gouvernementale. Je m'appuie sur des sources d'actualités et déclarations publiques vérifiées.",
 }
 
 export function ChatInterface() {

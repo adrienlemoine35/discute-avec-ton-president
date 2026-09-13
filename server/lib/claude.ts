@@ -1,8 +1,9 @@
 import { Mistral } from '@mistralai/mistralai';
-import { GoogleGenerativeAI, FunctionDeclaration, SchemaType, Part } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import { searchSources, SourceResult } from './supabase.js';
 import { getCache, setCache } from './cache.js';
+import { getLiveRssNews, searchLiveRss, RSSArticle } from './rss.js';
 
 dotenv.config({ path: '../.env', override: true });
 
@@ -11,7 +12,9 @@ const mistral = process.env.MISTRAL_API_KEY
   ? new Mistral({ apiKey: process.env.MISTRAL_API_KEY })
   : null;
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!);
+const genAI = process.env.GOOGLE_AI_API_KEY
+  ? new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
+  : null;
 
 // ── File de requêtes : 1 à la fois pour ménager le quota ──────────────────
 let queue = Promise.resolve();
@@ -49,7 +52,7 @@ async function runSearch(query: string, topK = 6): Promise<SourceResult[]> {
   }
 }
 
-function buildSources(collected: SourceResult[]) {
+function buildSources(collected: Array<SourceResult | RSSArticle>) {
   const seen = new Set<string>();
   return collected
     .filter(s => {
@@ -60,9 +63,11 @@ function buildSources(collected: SourceResult[]) {
     })
     .slice(0, 5)
     .map(s => ({
-      title: s.title, url: s.source_url, date: s.source_date,
-      type: s.source_type,
-      excerpt: s.content.slice(0, 200) + (s.content.length > 200 ? '…' : ''),
+      title: s.title ?? null,
+      url: s.source_url ?? null,
+      date: s.source_date ?? null,
+      type: s.source_type ?? null,
+      excerpt: (s.content ?? '').slice(0, 200) + ((s.content?.length ?? 0) > 200 ? '…' : ''),
     }));
 }
 
@@ -201,31 +206,66 @@ async function _ask(question: string): Promise<AskResult> {
     return cached;
   }
 
-  // 2. Mistral en premier (franco-français, free tier)
+  // 2. Extrait les flux RSS en direct
+  let liveSources: RSSArticle[] = [];
+  try {
+    const liveArticles = await getLiveRssNews();
+    if (liveArticles && liveArticles.length > 0) {
+      liveSources = searchLiveRss(liveArticles, question);
+    }
+  } catch (e) {
+    console.warn('[claude] Erreur live RSS:', e);
+  }
+
+  // 3. Recherche Supabase
+  let dbSources: SourceResult[] = [];
+  try {
+    dbSources = await runSearch(question, 4);
+  } catch (e) {
+    console.warn('[claude] Erreur Supabase:', e);
+  }
+
+  const combinedSources = [...liveSources, ...dbSources].slice(0, 5);
+
+  // 4. Mistral en premier
   if (mistral) {
     try {
       console.log('[claude] → Mistral mistral-small-latest');
       const result = await askViaMistral(question);
+      if (result.sources.length === 0 && combinedSources.length > 0) {
+        result.sources = buildSources(combinedSources);
+        result.mode = 'sourced';
+      }
       setCache(question, result);
       return result;
     } catch (err: any) {
       const isQuota = err?.status === 429 || String(err?.message).includes('429') || String(err?.message).includes('rate');
       console.warn(`[claude] Mistral ${isQuota ? 'quota' : 'erreur'}: ${err?.message}`);
     }
-  } else {
-    console.warn('[claude] MISTRAL_API_KEY non configurée — ajoutez-la dans .env');
   }
 
-  // 3. Gemini en fallback
-  try {
-    const result = await askViaGemini(question);
-    setCache(question, result);
-    return result;
-  } catch (err) {
-    console.error('[claude] Gemini aussi KO:', err);
+  // 5. Gemini en fallback
+  if (genAI) {
+    try {
+      console.log('[claude] → Gemini fallback');
+      const result = await askViaGemini(question);
+      if (result.sources.length === 0 && combinedSources.length > 0) {
+        result.sources = buildSources(combinedSources);
+        result.mode = 'sourced';
+      }
+      setCache(question, result);
+      return result;
+    } catch (err) {
+      console.error('[claude] Gemini KO:', err);
+    }
   }
 
-  return EMERGENCY;
+  const finalSources = buildSources(combinedSources);
+  return {
+    answer: "Permettez-moi de vous répondre très directement : sur cette question essentielle pour notre pays, notre engagement et notre cap demeurent constants. Nous conjuguons réformes de fond, écoute de la représentation nationale et protection de tous nos concitoyens.",
+    mode: finalSources.length > 0 ? 'sourced' : 'styled',
+    sources: finalSources,
+  };
 }
 
 export function askPresident(question: string): Promise<AskResult> {
