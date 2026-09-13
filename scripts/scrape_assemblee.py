@@ -25,38 +25,48 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dat
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, "assemblee_raw.json")
 
 # ─────────────────────────────────────────────
-# Flux RSS & Sources Parlementaires / Politiques
+# Flux RSS & Sources Parlementaires / Politiques / Gouvernement
 # ─────────────────────────────────────────────
 RSS_FEEDS = [
     {
-        "url": "https://www.assemblee-nationale.fr/dyn/rss/actualites",
-        "site": "assemblee-nationale.fr",
-        "type": "declaration",
-    },
-    {
-        "url": "https://www.vie-publique.fr/rss/discours.xml",
-        "site": "vie-publique.fr",
-        "type": "discours",
-    },
-    {
-        "url": "https://www.vie-publique.fr/rss/actualites.xml",
-        "site": "vie-publique.fr",
-        "type": "communique",
-    },
-    {
-        "url": "https://lcp.fr/rss.xml",
-        "site": "lcp.fr",
-        "type": "communique",
-    },
-    {
-        "url": "https://www.publicsenat.fr/rss.xml",
-        "site": "publicsenat.fr",
-        "type": "communique",
+        "url": "https://www.francetvinfo.fr/politique.rss",
+        "site": "francetvinfo.fr",
+        "type": "actualite",
     },
     {
         "url": "https://www.lemonde.fr/politique/rss_full.xml",
         "site": "lemonde.fr",
-        "type": "interview",
+        "type": "actualite",
+    },
+    {
+        "url": "https://www.lefigaro.fr/rss/figaro_politique.xml",
+        "site": "lefigaro.fr",
+        "type": "actualite",
+    },
+    {
+        "url": "https://www.bfmtv.com/rss/politique/",
+        "site": "bfmtv.com",
+        "type": "actualite",
+    },
+    {
+        "url": "https://lcp.fr/rss.xml",
+        "site": "lcp.fr",
+        "type": "parlement",
+    },
+    {
+        "url": "https://www.senat.fr/rss/actualites.rss",
+        "site": "senat.fr",
+        "type": "parlement",
+    },
+    {
+        "url": "https://www.france24.com/fr/france/rss",
+        "site": "france24.com",
+        "type": "actualite",
+    },
+    {
+        "url": "https://www.europe1.fr/rss/politique.xml",
+        "site": "europe1.fr",
+        "type": "actualite",
     },
 ]
 
