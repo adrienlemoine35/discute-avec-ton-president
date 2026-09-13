@@ -85,56 +85,81 @@ export default function App() {
       <section className="border-t border-slate-200 bg-slate-50 py-12 px-5">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-center text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">Sources indexées</h3>
-          <p className="text-center text-xs text-slate-400 mb-8">Discours, déclarations, travaux parlementaires, flux d'actualité et réseaux officiels</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <p className="text-center text-xs text-slate-400 mb-8">Portails gouvernementaux, ministères, travaux parlementaires, presse politique et réseaux officiels</p>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
             {[
               {
                 site: 'elysee.fr',
-                type: 'Officiel',
+                type: 'Présidence',
                 color: FR_BLUE,
-                detail: 'Discours, allocutions\net communiqués officiels',
+                detail: 'Discours, allocutions solennelles\net communiqués de l\'Élysée',
                 count: 'Présidence',
                 href: 'https://www.elysee.fr',
+              },
+              {
+                site: 'info.gouv.fr',
+                type: 'Gouvernement',
+                color: '#0284C7',
+                detail: 'Portail du Gouvernement,\nConseil des ministres & décrets',
+                count: 'Gouvernement',
+                href: 'https://www.info.gouv.fr',
+              },
+              {
+                site: 'service-public.gouv.fr',
+                type: 'Administration',
+                color: '#2563EB',
+                detail: 'Guide des droits, démarches\net actualités administratives',
+                count: 'Service Public',
+                href: 'https://www.service-public.gouv.fr',
               },
               {
                 site: 'assemblee-nationale.fr',
                 type: 'Parlement',
                 color: '#0F766E',
-                detail: 'Actualités, lois votées\net débats en séance',
+                detail: 'Lois votées, amendements\net débats en séance publique',
                 count: 'Assemblée',
                 href: 'https://www.assemblee-nationale.fr',
+              },
+              {
+                site: 'senat.fr & LCP',
+                type: 'Parlement',
+                color: '#0D9488',
+                detail: 'Travaux du Sénat, commissions\net retransmissions LCP',
+                count: 'Sénat & LCP',
+                href: 'https://www.senat.fr',
+              },
+              {
+                site: 'Ministères officiels',
+                type: 'Ministères',
+                color: '#4F46E5',
+                detail: 'Défense, Économie, Intérieur,\nAffaires étrangères, Éducation, Santé...',
+                count: '10+ Ministères',
+                href: 'https://www.defense.gouv.fr',
               },
               {
                 site: 'vie-publique.fr',
                 type: 'Archives',
                 color: '#1D4ED8',
-                detail: 'Déclarations publiques\net comptes-rendus',
+                detail: 'Déclarations publiques,\ntextes de référence & fiches',
                 count: 'Vie Publique',
                 href: 'https://www.vie-publique.fr',
               },
               {
-                site: 'x.com / Twitter',
-                type: 'Réseau social',
-                color: '#1a1a1a',
-                detail: '@EmmanuelMacron\net @Elysee',
-                count: 'Réseaux',
-                href: 'https://x.com/EmmanuelMacron',
-              },
-              {
-                site: 'instagram.com',
-                type: 'Réseau social',
-                color: '#E1306C',
-                detail: '@elysee\net @emmanuelmacron',
-                count: 'Réseaux',
-                href: 'https://www.instagram.com/elysee',
-              },
-              {
-                site: 'Interviews & presse',
+                site: 'Presse & Dépêches',
                 type: 'Médias',
                 color: '#6B21A8',
-                detail: 'TF1, France 2, LCP\net débats publics',
-                count: 'Médias',
-                href: null,
+                detail: 'France Info, Le Monde, Le Figaro,\nBFMTV, France 24, Europe 1',
+                count: 'Dépêches Live',
+                href: 'https://www.francetvinfo.fr/politique.rss',
+              },
+              {
+                site: 'Réseaux sociaux',
+                type: 'Officiel',
+                color: '#1a1a1a',
+                detail: '@EmmanuelMacron & @Elysee\n(X / Twitter, Instagram)',
+                count: 'Réseaux',
+                href: 'https://x.com/EmmanuelMacron',
               },
             ].map((s) => (
               <div key={s.site} className="bg-white rounded-xl border border-slate-200 p-4 text-center flex flex-col gap-1.5">
@@ -154,6 +179,53 @@ export default function App() {
               </div>
             ))}
           </div>
+
+          {/* ── Explication Architecture RAG & Mises à jour ─────────────────── */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-left shadow-sm">
+            <div className="max-w-3xl mx-auto space-y-6">
+              <div className="text-center pb-2 border-b border-slate-100">
+                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-1">
+                  Architecture RAG & Moteur d'actualité en direct
+                </h4>
+                <p className="text-xs text-slate-500">
+                  Comment l'agent recherche, vérifie et met à jour ses connaissances en continu.
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-6 pt-2">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs mb-1">
+                    01
+                  </div>
+                  <h5 className="text-xs font-bold text-slate-900">Fonctionnement du RAG</h5>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    À chaque question, notre moteur effectue une recherche sémantique hybride (vectorielle & FTS) sur Supabase pour extraire les déclarations, textes de loi et discours officiels les plus probants.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs mb-1">
+                    02
+                  </div>
+                  <h5 className="text-xs font-bold text-slate-900">Capture des actualités chaudes</h5>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    Le <span className="font-semibold text-slate-700">Live RSS & Scraping Engine</span> interroge automatiquement en temps réel les portails du Gouvernement, du Parlement, des ministères et des agences de presse politique française.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-xs mb-1">
+                    03
+                  </div>
+                  <h5 className="text-xs font-bold text-slate-900">Rythme de mise à jour</h5>
+                  <p className="text-[11px] text-slate-500 leading-relaxed">
+                    <strong className="font-semibold text-slate-700">Temps réel & continu</strong> : les flux d'actualités fraîches sont rafraîchis toutes les <strong className="font-semibold text-slate-700">10 minutes</strong>, tandis que la base institutionnelle est synchronisée quotidiennement.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
