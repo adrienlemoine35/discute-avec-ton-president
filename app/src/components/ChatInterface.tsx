@@ -8,12 +8,13 @@ const FR_BLUE = '#0055A4'
 const FR_RED = '#EF4135'
 
 const TOPICS: { label: string; question: string; emoji: string }[] = [
+  { emoji: '🔥', label: 'Actu du jour', question: "Quelles sont les dernières actualités politiques et les débats parlementaires aujourd'hui ?" },
+  { emoji: '🏛️', label: 'Assemblée', question: "Quelle est l'actualité récente à l'Assemblée nationale et les projets de loi en cours ?" },
   { emoji: '👴', label: 'Retraites', question: 'Quelle est votre position sur la réforme des retraites ?' },
-  { emoji: '�️', label: 'Assemblée', question: 'Quelle est votre relation avec l\'Assemblée nationale et les compromis parlementaires ?' },
-  { emoji: '�🇪🇺', label: 'Europe', question: "Quelle est votre vision pour l'Europe et la souveraineté européenne ?" },
+  { emoji: '🇪🇺', label: 'Europe', question: "Quelle est votre vision pour l'Europe et la souveraineté européenne ?" },
   { emoji: '⚛️', label: 'Nucléaire', question: "Quelle est votre politique sur l'énergie nucléaire ?" },
   { emoji: '🌿', label: 'Écologie', question: 'Comment abordez-vous la transition écologique et le climat ?' },
-  { emoji: '🏭', label: 'Industrie', question: "Comment reindustrialiser la France et retrouver la souveraineté industrielle ?" },
+  { emoji: '🏭', label: 'Industrie', question: "Comment réindustrialiser la France et retrouver la souveraineté industrielle ?" },
   { emoji: '🧑‍🎓', label: 'Éducation', question: 'Quelle est votre politique en matière d\'éducation et d\'école ?' },
   { emoji: '🤖', label: 'IA', question: "Quelle est la stratégie de la France sur l'intelligence artificielle ?" },
   { emoji: '🛡️', label: 'Défense', question: 'Quelle est votre vision pour la défense nationale et européenne ?' },
