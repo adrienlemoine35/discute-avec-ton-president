@@ -10,37 +10,31 @@ export default function App() {
     <div className="min-h-screen flex flex-col" style={{ background: '#F8F9FB' }}>
 
       {/* ── Header (masqué en mode embed) ───────────────────────────────── */}
-      {!isEmbedded && <header className="bg-white border-b border-slate-200 sticky top-0 z-50" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}>
+      {!isEmbedded && <header className="bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-50">
         <div className="flex h-1">
           <div className="flex-1" style={{ background: FR_BLUE }} />
           <div className="flex-1 bg-white" />
           <div className="flex-1" style={{ background: FR_RED }} />
         </div>
-        <div className="max-w-4xl mx-auto px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 rounded-lg overflow-hidden shadow-sm border border-slate-100">
-              <div className="flex-1" style={{ background: FR_BLUE }} />
-              <div className="flex-1 bg-white" />
-              <div className="flex-1" style={{ background: FR_RED }} />
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 leading-none mb-0.5">Projet IA / RAG</p>
-              <h1 className="text-sm font-bold text-slate-900 leading-none">Discute avec ton Président</h1>
-            </div>
+        <div className="max-w-4xl mx-auto px-5 py-3 flex items-center gap-3">
+          <div className="flex h-8 w-8 rounded-lg overflow-hidden shadow-sm border border-slate-100">
+            <div className="flex-1" style={{ background: FR_BLUE }} />
+            <div className="flex-1 bg-white" />
+            <div className="flex-1" style={{ background: FR_RED }} />
           </div>
-          <div className="hidden sm:flex items-center gap-1.5">
-            {['RAG', 'Agentic', 'Mistral AI', 'Supabase FTS'].map((b) => (
-              <span key={b} className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-200 text-slate-500">{b}</span>
-            ))}
-          </div>
+          <h1 className="text-sm font-bold text-slate-900 leading-none">Discute avec ton Président</h1>
         </div>
       </header>}
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="pt-14 pb-10 text-center px-5">
+      <section className="relative pt-16 pb-12 text-center px-5 overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06]"
+          style={{ backgroundImage: `radial-gradient(circle at 20% 20%, ${FR_BLUE} 0%, transparent 40%), radial-gradient(circle at 80% 30%, ${FR_RED} 0%, transparent 40%)` }}
+        />
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-xs text-slate-500 font-medium mb-5 shadow-sm">
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: FR_RED }} />
-          Démo — base de sources en cours d'indexation
+          Sources mises à jour toutes les 10 minutes
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-4">
@@ -50,7 +44,7 @@ export default function App() {
           </span>
         </h2>
         <p className="max-w-xl mx-auto text-slate-500 text-base leading-relaxed">
-          L'agent analyse en direct toute l'actualité de la France, les débats parlementaires et les positions officielles — chaque réponse est sourcée et vérifiable.
+          L'agent lit en continu la presse, le Parlement et les ministères, puis répond avec ses sources à l'appui.
         </p>
       </section>
 
@@ -65,10 +59,10 @@ export default function App() {
           <h3 className="text-center text-xs font-semibold uppercase tracking-widest text-slate-400 mb-10">Comment ça fonctionne</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {[
-              { step: '01', icon: '💬', title: 'Tu poses ta question', desc: 'En français, librement.' },
-              { step: '02', icon: '🔍', title: "L'agent cherche", desc: 'Recherche plein texte Supabase (FTS) sur les discours officiels.' },
-              { step: '03', icon: '🧠', title: 'Mistral synthétise', desc: 'Réponse fidèle aux sources, à la manière de Macron.' },
-              { step: '04', icon: '📎', title: 'Sources citées', desc: 'Liens vers les déclarations originales.' },
+              { step: '01', icon: '💬', title: 'Tu poses ta question', desc: 'En français, sans forme imposée.' },
+              { step: '02', icon: '🔍', title: "L'agent cherche", desc: 'Recherche hybride dans Supabase et les flux RSS du jour.' },
+              { step: '03', icon: '🧠', title: 'Mistral rédige', desc: 'La réponse reprend le ton de Macron et s\'appuie sur les sources trouvées.' },
+              { step: '04', icon: '📎', title: 'Sources citées', desc: 'Chaque lien renvoie au texte ou à l\'article d\'origine.' },
             ].map((item) => (
               <div key={item.step} className="text-center">
                 <div className="text-2xl mb-2">{item.icon}</div>
@@ -85,9 +79,9 @@ export default function App() {
       <section className="border-t border-slate-200 bg-slate-50 py-12 px-5">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-center text-xs font-semibold uppercase tracking-widest text-slate-400 mb-2">Sources indexées</h3>
-          <p className="text-center text-xs text-slate-400 mb-8">Portails gouvernementaux, ministères, travaux parlementaires, presse politique et réseaux officiels</p>
+          <p className="text-center text-xs text-slate-400 mb-8">Gouvernement, ministères, Parlement, presse et comptes officiels</p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
             {[
               {
                 site: 'elysee.fr',
@@ -153,14 +147,6 @@ export default function App() {
                 count: 'Dépêches Live',
                 href: 'https://www.francetvinfo.fr/politique.rss',
               },
-              {
-                site: 'Réseaux sociaux',
-                type: 'Officiel',
-                color: '#1a1a1a',
-                detail: '@EmmanuelMacron & @Elysee\n(X / Twitter, Instagram)',
-                count: 'Réseaux',
-                href: 'https://x.com/EmmanuelMacron',
-              },
             ].map((s) => (
               <div key={s.site} className="bg-white rounded-xl border border-slate-200 p-4 text-center flex flex-col gap-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full text-white inline-block" style={{ background: s.color }}>
@@ -180,15 +166,37 @@ export default function App() {
             ))}
           </div>
 
+          <div className="mb-10">
+            <h4 className="text-center text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-3">Comptes officiels suivis</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { site: '@EmmanuelMacron', detail: 'Présidence · X', href: 'https://x.com/EmmanuelMacron' },
+                { site: '@Elysee', detail: 'Présidence · X & Instagram', href: 'https://x.com/Elysee' },
+                { site: '@GouvernementFR', detail: 'Gouvernement · X', href: 'https://x.com/gouvernementFR' },
+                { site: '@AssembleeNat', detail: 'Assemblée nationale · X', href: 'https://x.com/AssembleeNat' },
+                { site: '@Senat', detail: 'Sénat · X', href: 'https://x.com/Senat' },
+                { site: '@MinDefense', detail: 'Ministère des Armées · X', href: 'https://x.com/MinDefense' },
+                { site: '@Interieur_Gouv', detail: 'Ministère de l\'Intérieur · X', href: 'https://x.com/Interieur_Gouv' },
+                { site: '@francediplo', detail: 'Affaires étrangères · X', href: 'https://x.com/francediplo' },
+              ].map((s) => (
+                <a key={s.site} href={s.href} target="_blank" rel="noopener noreferrer"
+                   className="bg-white rounded-lg border border-slate-200 px-3 py-2 flex flex-col hover:border-blue-300 transition-colors">
+                  <span className="text-xs font-semibold text-blue-700">{s.site}</span>
+                  <span className="text-[10px] text-slate-400">{s.detail}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+
           {/* ── Explication Architecture RAG & Mises à jour ─────────────────── */}
           <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 text-left shadow-sm">
             <div className="max-w-3xl mx-auto space-y-6">
               <div className="text-center pb-2 border-b border-slate-100">
                 <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-1">
-                  Architecture RAG & Moteur d'actualité en direct
+                  Comment fonctionne la recherche
                 </h4>
                 <p className="text-xs text-slate-500">
-                  Comment l'agent recherche, vérifie et met à jour ses connaissances en continu.
+                  Ce que fait l'agent avant de répondre.
                 </p>
               </div>
 
@@ -197,9 +205,9 @@ export default function App() {
                   <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs mb-1">
                     01
                   </div>
-                  <h5 className="text-xs font-bold text-slate-900">Fonctionnement du RAG</h5>
+                  <h5 className="text-xs font-bold text-slate-900">Recherche dans Supabase</h5>
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    À chaque question, notre moteur effectue une recherche sémantique hybride (vectorielle & FTS) sur Supabase pour extraire les déclarations, textes de loi et discours officiels les plus probants.
+                    Chaque question déclenche une recherche vectorielle et plein texte dans la base de discours, lois et déclarations déjà indexée.
                   </p>
                 </div>
 
@@ -207,9 +215,9 @@ export default function App() {
                   <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs mb-1">
                     02
                   </div>
-                  <h5 className="text-xs font-bold text-slate-900">Capture des actualités chaudes</h5>
+                  <h5 className="text-xs font-bold text-slate-900">Lecture des flux RSS</h5>
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    Le <span className="font-semibold text-slate-700">Live RSS & Scraping Engine</span> interroge automatiquement en temps réel les portails du Gouvernement, du Parlement, des ministères et des agences de presse politique française.
+                    En parallèle, un scraper interroge les flux du Gouvernement, du Parlement, des ministères et de la presse politique.
                   </p>
                 </div>
 
@@ -219,7 +227,7 @@ export default function App() {
                   </div>
                   <h5 className="text-xs font-bold text-slate-900">Rythme de mise à jour</h5>
                   <p className="text-[11px] text-slate-500 leading-relaxed">
-                    <strong className="font-semibold text-slate-700">Temps réel & continu</strong> : les flux d'actualités fraîches sont rafraîchis toutes les <strong className="font-semibold text-slate-700">10 minutes</strong>, tandis que la base institutionnelle est synchronisée quotidiennement.
+                    Les flux d'actualité sont relus toutes les 10 minutes. La base de discours et de textes officiels est réindexée chaque jour.
                   </p>
                 </div>
               </div>
@@ -239,9 +247,9 @@ export default function App() {
           </div>
           <span className="text-xs text-slate-500">Discute avec ton Président</span>
         </div>
-        <p className="text-xs text-slate-400">Mistral AI · Gemini (fallback) · Supabase FTS · RAG agentique</p>
+        <p className="text-xs text-slate-400">Mistral AI · Gemini en secours · Supabase · veille RSS</p>
         <p className="mt-3 text-[10px] text-slate-400 max-w-lg mx-auto">
-          ⚠️ Démo éducative. Les réponses sont générées par IA à partir de déclarations publiques et ne représentent pas la position officielle de l'Élysée.
+          Projet éducatif. Les réponses sont générées par IA à partir de sources publiques et ne représentent pas la position officielle de l'Élysée.
         </p>
       </footer>
 
