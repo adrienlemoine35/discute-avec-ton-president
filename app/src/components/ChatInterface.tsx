@@ -171,7 +171,7 @@ export function ChatInterface() {
           </button>
         </form>
         <p className="mt-2 text-[10px] text-slate-400 text-center">
-          ⚠️ Réponses générées par IA à partir de déclarations publiques. Usage éducatif uniquement.
+          Réponses générées par IA à partir de sources publiques. Usage éducatif uniquement.
         </p>
       </div>
 
